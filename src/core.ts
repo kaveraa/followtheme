@@ -140,3 +140,52 @@ export function apply(root: Element, origin: Element | null, options?: Options):
   mirrors.set(root, m);
   return () => release(root);
 }
+
+const EXCLUDED = /^(script|style|link|template)$/i;
+let active: (() => void) | null = null;
+
+export function start(options?: Options): () => void {
+  if (!hasDocument()) return noop;
+  if (active) return active;
+  const o = resolve(options);
+  const container = o.root ?? document.body;
+  const roots = new Set<Element>();
+  let last: Element | null = null;
+  const remember = (e: Event) => {
+    if (e.target instanceof Element) last = e.target;
+  };
+  const events = ['pointerdown', 'keydown', 'focusin'] as const;
+  for (const t of events) document.addEventListener(t, remember, true);
+
+  const origin = (): Element | null => {
+    const a = document.activeElement;
+    return a && a !== document.body && a !== document.documentElement ? a : last;
+  };
+  const excluded = (el: Element) => EXCLUDED.test(el.tagName) || el.hasAttribute(MARK) || (o.ignore?.(el) ?? false);
+
+  const observer = new MutationObserver((records) => {
+    for (const r of records) {
+      for (const n of r.addedNodes) {
+        if (!(n instanceof Element) || excluded(n)) continue;
+        try {
+          apply(n, origin(), o);
+        } catch {
+          // keep going for the other roots
+        }
+        if (hasMirror(n)) roots.add(n);
+      }
+      for (const n of r.removedNodes) if (n instanceof Element && roots.delete(n)) release(n);
+    }
+  });
+  observer.observe(container, { childList: true });
+
+  const stop = () => {
+    observer.disconnect();
+    for (const t of events) document.removeEventListener(t, remember, true);
+    for (const r of roots) release(r);
+    roots.clear();
+    active = null;
+  };
+  active = stop;
+  return stop;
+}
