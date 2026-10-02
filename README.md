@@ -3,8 +3,8 @@
 <p align="center"><img src="https://raw.githubusercontent.com/kaveraa/followtheme/main/art/banner.svg" alt="followtheme" width="100%"></p>
 
 [![Tests](https://github.com/kaveraa/followtheme/actions/workflows/tests.yml/badge.svg)](https://github.com/kaveraa/followtheme/actions/workflows/tests.yml)
-[![npm](https://img.shields.io/npm/v/followtheme.svg)](https://www.npmjs.com/package/followtheme)
-[![Downloads](https://img.shields.io/npm/dm/followtheme.svg)](https://www.npmjs.com/package/followtheme)
+[![npm](https://img.shields.io/npm/v/@kaveraa/followtheme.svg)](https://www.npmjs.com/package/@kaveraa/followtheme)
+[![Downloads](https://img.shields.io/npm/dm/@kaveraa/followtheme.svg)](https://www.npmjs.com/package/@kaveraa/followtheme)
 [![License](https://img.shields.io/github/license/kaveraa/followtheme.svg)](https://github.com/kaveraa/followtheme/blob/main/LICENSE)
 
 **English** - [Français](https://github.com/kaveraa/followtheme/blob/main/README.fr.md)
@@ -27,7 +27,7 @@ setup, no change to the overlays, any portal library.
 ## Install
 
 ```
-npm i followtheme
+npm i @kaveraa/followtheme
 ```
 
 Zero dependencies. React 18+ and Vue 3.3+ are optional peers.
@@ -35,7 +35,7 @@ Zero dependencies. React 18+ and Vue 3.3+ are optional peers.
 ## React
 
 ```tsx
-import { FollowTheme } from 'followtheme/react';
+import { FollowTheme } from '@kaveraa/followtheme/react';
 
 <FollowTheme>
   <App />
@@ -48,7 +48,7 @@ appears before the click, use the hook and hand the container to the
 library:
 
 ```tsx
-import { useFollowTheme } from 'followtheme/react';
+import { useFollowTheme } from '@kaveraa/followtheme/react';
 import * as Dialog from '@radix-ui/react-dialog';
 
 function Card() {
@@ -74,7 +74,7 @@ take a function.
 ## Vue
 
 ```ts
-import { followtheme } from 'followtheme/vue';
+import { followtheme } from '@kaveraa/followtheme/vue';
 
 createApp(App).use(followtheme).mount('#app');
 ```
@@ -84,7 +84,7 @@ Explicit path, with `<Teleport>` or a reka-ui portal:
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useFollowTheme } from 'followtheme/vue';
+import { useFollowTheme } from '@kaveraa/followtheme/vue';
 
 const button = ref<HTMLElement | null>(null);
 const { to } = useFollowTheme(button);
@@ -103,7 +103,7 @@ const { to } = useFollowTheme(button);
 ## Plain DOM
 
 ```ts
-import { start, apply, scopeOf, configure } from 'followtheme';
+import { start, apply, scopeOf, configure } from '@kaveraa/followtheme';
 
 const stop = start();                 // watch body, theme every new portal root
 apply(portalRoot, originElement);     // do it by hand for one root; returns release()

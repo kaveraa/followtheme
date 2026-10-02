@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { FollowTheme } from 'followtheme/react';
-import { followtheme } from 'followtheme/vue';
+import { FollowTheme } from '@kaveraa/followtheme/react';
+import { followtheme } from '@kaveraa/followtheme/vue';
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Teleport, createApp, defineComponent, h, ref } from 'vue';
