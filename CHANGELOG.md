@@ -5,6 +5,14 @@ follows Keep a Changelog and the project follows Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-02
+
+### Changed
+
+- Published under the `@kaveraa` scope, like the other kaveraa packages:
+  `npm i @kaveraa/followtheme`. The unscoped `followtheme` 0.1.0 is
+  unpublished.
+
 ## [0.1.0] - 2026-10-02
 
 ### Added

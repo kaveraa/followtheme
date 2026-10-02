@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
-    "followtheme": "file:..",
+    "@kaveraa/followtheme": "file:..",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "vue": "^3.5.43"
