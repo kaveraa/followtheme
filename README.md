@@ -1,5 +1,14 @@
 # followtheme
 
+<p align="center"><img src="https://raw.githubusercontent.com/kaveraa/followtheme/main/art/banner.svg" alt="followtheme" width="100%"></p>
+
+[![Tests](https://github.com/kaveraa/followtheme/actions/workflows/tests.yml/badge.svg)](https://github.com/kaveraa/followtheme/actions/workflows/tests.yml)
+[![npm](https://img.shields.io/npm/v/followtheme.svg)](https://www.npmjs.com/package/followtheme)
+[![Downloads](https://img.shields.io/npm/dm/followtheme.svg)](https://www.npmjs.com/package/followtheme)
+[![License](https://img.shields.io/github/license/kaveraa/followtheme.svg)](https://github.com/kaveraa/followtheme/blob/main/LICENSE)
+
+**English** - [Français](https://github.com/kaveraa/followtheme/blob/main/README.fr.md)
+
 A scoped theme follows the overlays it opens.
 
 You theme a section of the page: `<section data-theme="ocean">`, a `dark`
