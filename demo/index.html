@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>followtheme demo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='18' height='18' rx='5' fill='%230b3954'/%3E%3Crect x='12' y='12' width='18' height='18' rx='5' fill='%23f3d9b1' stroke='%230b3954' stroke-width='2'/%3E%3C/svg%3E">
 <style>
   :root { --bg: #f4f4f2; --fg: #1a1a19; --accent: #555; }
   [data-theme="ocean"] { --bg: #0b3954; --fg: #e0fbfc; --accent: #3dccc7; }
@@ -12,6 +13,7 @@
   main { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
   .card, .panel { background: var(--bg); color: var(--fg); border: 2px solid var(--accent); border-radius: 12px; padding: 20px; }
   .panel { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); min-width: 260px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+  .veil { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); }
   button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 2px solid var(--accent); background: var(--accent); color: var(--bg); cursor: pointer; }
   h1 { grid-column: 1 / -1; margin: 0; font-size: 20px; }
   h2 { margin: 0 0 8px; font-size: 16px; }

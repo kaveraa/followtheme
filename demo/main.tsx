@@ -13,6 +13,7 @@ function ReactCard({ theme }: { theme: string }) {
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger>Open a Radix dialog</Dialog.Trigger>
         <Dialog.Portal>
+          <Dialog.Overlay className="veil" />
           <Dialog.Content className="panel">
             <Dialog.Title>Still {theme}</Dialog.Title>
             <Dialog.Description>This dialog lives under body and kept the card's theme.</Dialog.Description>
@@ -42,6 +43,7 @@ const VueCard = defineComponent({
         h('h2', `Vue, ${props.theme}`),
         h('button', { onClick: () => (open.value = true) }, 'Open a teleported dialog'),
         h(Teleport, { to: 'body' }, [
+          open.value ? h('div', { class: 'veil', onClick: () => (open.value = false) }) : null,
           open.value
             ? h('div', { class: 'panel', role: 'dialog' }, [
                 h('h2', `Still ${props.theme}`),
