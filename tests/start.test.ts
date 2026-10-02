@@ -129,6 +129,19 @@ describe('start', () => {
     expect(other.getAttribute('data-theme')).toBe('ocean');
   });
 
+  it('ignores an interaction older than a second, so a stale focus never themes a later overlay', async () => {
+    html('<section data-theme="ocean"><button id="b">open</button></section>');
+    stop = start();
+    const now = vi.spyOn(performance, 'now');
+    now.mockReturnValue(0);
+    document.getElementById('b')!.focus();
+    now.mockReturnValue(5000);
+    const root = portal();
+    await tick();
+    now.mockRestore();
+    expect(root.hasAttribute('data-followtheme')).toBe(false);
+  });
+
   it('tears down only when the last caller stops', async () => {
     html('<section data-theme="ocean"><button id="b">open</button></section>');
     const first = start();

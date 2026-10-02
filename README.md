@@ -115,11 +115,11 @@ its root in sync until you call the function it returns.
 
 ## When the automatic path is not enough
 
-The heuristic takes the focused element, or the last `pointerdown`,
-`keydown` or `focusin` target, as the origin of a new portal root. An
-overlay opened by a timer, or a library that creates its portal container
-at mount time rather than on open, needs the explicit path: give the
-library a container from the hook or the composable.
+The heuristic takes the last `pointerdown`, `keydown` or `focusin` target
+outside the new portal root, if it is less than a second old, as the
+origin. An overlay opened by a timer, or a library that creates its portal
+container at mount time rather than on open, needs the explicit path: give
+the library a container from the hook or the composable.
 
 | Library | Prop to pass |
 |---|---|

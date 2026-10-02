@@ -148,21 +148,21 @@ let owners = 0;
 function begin(o: Resolved): () => void {
   const container = o.root ?? document.body;
   const roots = new Set<Element>();
-  const history: Element[] = [];
+  const history: { target: Element; at: number }[] = [];
   const remember = (e: Event) => {
     if (!(e.target instanceof Element)) return;
-    history.unshift(e.target);
+    history.unshift({ target: e.target, at: performance.now() });
     history.length = Math.min(history.length, 3);
   };
   const events = ['pointerdown', 'keydown', 'focusin'] as const;
   for (const t of events) document.addEventListener(t, remember, true);
 
-  // The callback runs after the library may have moved focus into the new root:
-  // the origin is the most recent interaction target that is not inside it.
+  // The origin is the most recent interaction that is not inside the new root and
+  // happened within the last second. The callback runs after the library may have
+  // moved focus into the root, and focus left on an old trigger must not count.
   const origin = (root: Element): Element | null => {
-    const a = document.activeElement;
-    const candidates = a && a !== document.body && a !== document.documentElement ? [a, ...history] : history;
-    return candidates.find((c) => !root.contains(c)) ?? null;
+    const now = performance.now();
+    return history.find((h) => now - h.at < 1000 && !root.contains(h.target))?.target ?? null;
   };
   const excluded = (el: Element) => EXCLUDED.test(el.tagName) || el.hasAttribute(MARK) || (o.ignore?.(el) ?? false);
 

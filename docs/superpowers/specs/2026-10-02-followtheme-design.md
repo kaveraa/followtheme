@@ -111,12 +111,13 @@ scope), nothing is written either.
 `start()`:
 
 1. Listens on `document` in capture phase to `pointerdown`, `keydown` and
-   `focusin`, remembering the last target in one variable. This is the
-   fallback origin.
+   `focusin`, remembering the last three targets with their time.
 2. Observes `root` (default `document.body`) for added direct children.
-   For each added element that is not excluded, the origin is
-   `document.activeElement` when it is neither `null`, `body` nor
-   `html`, otherwise the remembered last target. Then `apply(root, origin)`.
+   For each added element that is not excluded, the origin is the most
+   recent remembered target that is not inside the new element and is less
+   than one second old. `document.activeElement` is not used: libraries
+   move focus into the overlay before the callback runs, and focus left on
+   an old trigger must not theme a later overlay. Then `apply(root, origin)`.
 3. Excluded by default: `script`, `style`, `link`, `template`, elements
    already marked `data-followtheme`, and anything the `ignore` option
    returns true for.
