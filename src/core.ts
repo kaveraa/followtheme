@@ -1,0 +1,206 @@
+export type Options = {
+  attributes?: string[];
+  classes?: (string | RegExp)[];
+  inlineVars?: boolean;
+  ignore?: (root: Element) => boolean;
+  root?: HTMLElement;
+};
+
+type Resolved = {
+  attributes: string[];
+  classes: (string | RegExp)[];
+  inlineVars: boolean;
+  ignore?: (root: Element) => boolean;
+  root?: HTMLElement;
+};
+
+const hasDocument = () => typeof document !== 'undefined';
+const ATTR = /^[a-zA-Z_:][-\w:.]*$/;
+
+let current: Resolved = { attributes: ['data-theme'], classes: ['dark', /^theme-/], inlineVars: true };
+
+function validate(o: Options): void {
+  for (const a of o.attributes ?? []) {
+    if (typeof a !== 'string' || !ATTR.test(a)) throw new TypeError(`followtheme: invalid entry in options.attributes: ${String(a)}`);
+  }
+  for (const c of o.classes ?? []) {
+    if (typeof c !== 'string' && !(c instanceof RegExp)) throw new TypeError(`followtheme: options.classes takes strings or RegExps, got ${String(c)}`);
+  }
+}
+
+export function configure(options: Options): void {
+  validate(options);
+  current = { ...current, ...options };
+}
+
+export function resolve(options?: Options): Resolved {
+  if (!options) return current;
+  validate(options);
+  return { ...current, ...options };
+}
+
+export function matchingClasses(el: Element, o: Resolved): string[] {
+  return [...el.classList].filter((c) => o.classes.some((m) => (typeof m === 'string' ? m === c : m.test(c))));
+}
+
+export function inlineVars(el: Element): [string, string][] {
+  const style = el.getAttribute('style');
+  if (!style) return [];
+  return style.split(';').flatMap((decl): [string, string][] => {
+    const i = decl.indexOf(':');
+    if (i < 0) return [];
+    const name = decl.slice(0, i).trim();
+    return name.startsWith('--') ? [[name, decl.slice(i + 1).trim()]] : [];
+  });
+}
+
+const isRoot = (el: Element) => el === document.documentElement || el === document.body;
+
+function isScope(el: Element, o: Resolved): boolean {
+  if (isRoot(el)) return false;
+  return o.attributes.some((a) => el.hasAttribute(a)) || matchingClasses(el, o).length > 0 || (o.inlineVars && inlineVars(el).length > 0);
+}
+
+export function scopeOf(el: Element | null, options?: Options): Element | null {
+  if (!hasDocument() || !el) return null;
+  const o = resolve(options);
+  for (let n: Element | null = el; n && !isRoot(n); n = n.parentElement) if (isScope(n, o)) return n;
+  return null;
+}
+
+export const MARK = 'data-followtheme';
+
+type Mirror = { scope: Element; attrs: string[]; classes: string[]; vars: string[]; observer: MutationObserver | null };
+const mirrors = new WeakMap<Element, Mirror>();
+const noop = () => {};
+
+function clear(root: Element, m: Mirror): void {
+  for (const a of m.attrs) root.removeAttribute(a);
+  for (const c of m.classes) root.classList.remove(c);
+  for (const v of m.vars) (root as HTMLElement).style?.removeProperty(v);
+  m.attrs = [];
+  m.classes = [];
+  m.vars = [];
+}
+
+function write(root: Element, m: Mirror, o: Resolved): void {
+  clear(root, m);
+  for (const a of o.attributes) {
+    const v = m.scope.getAttribute(a);
+    if (v !== null && !root.hasAttribute(a)) {
+      root.setAttribute(a, v);
+      m.attrs.push(a);
+    }
+  }
+  for (const c of matchingClasses(m.scope, o)) {
+    if (!root.classList.contains(c)) {
+      root.classList.add(c);
+      m.classes.push(c);
+    }
+  }
+  if (o.inlineVars) {
+    const style = (root as HTMLElement).style;
+    for (const [n, v] of inlineVars(m.scope)) {
+      if (style && !style.getPropertyValue(n)) {
+        style.setProperty(n, v);
+        m.vars.push(n);
+      }
+    }
+  }
+  root.setAttribute(MARK, '');
+}
+
+export function release(root: Element): void {
+  const m = mirrors.get(root);
+  if (!m) return;
+  m.observer?.disconnect();
+  clear(root, m);
+  root.removeAttribute(MARK);
+  mirrors.delete(root);
+}
+
+export const hasMirror = (root: Element): boolean => mirrors.has(root);
+
+export function apply(root: Element, origin: Element | null, options?: Options): () => void {
+  if (!hasDocument()) return noop;
+  const o = resolve(options);
+  release(root);
+  const scope = scopeOf(origin, o);
+  if (!scope || scopeOf(root.parentElement, o)) return noop;
+  const m: Mirror = { scope, attrs: [], classes: [], vars: [], observer: null };
+  write(root, m, o);
+  m.observer = new MutationObserver(() => {
+    try {
+      write(root, m, o);
+    } catch {
+      // one root failing must not stop the others
+    }
+  });
+  m.observer.observe(scope, { attributes: true, attributeFilter: [...o.attributes, 'class', 'style'] });
+  mirrors.set(root, m);
+  return () => release(root);
+}
+
+const EXCLUDED = /^(script|style|link|template)$/i;
+let active: (() => void) | null = null;
+let owners = 0;
+
+function begin(o: Resolved): () => void {
+  const container = o.root ?? document.body;
+  const roots = new Set<Element>();
+  const history: { target: Element; at: number }[] = [];
+  const remember = (e: Event) => {
+    if (!(e.target instanceof Element)) return;
+    history.unshift({ target: e.target, at: performance.now() });
+    history.length = Math.min(history.length, 3);
+  };
+  const events = ['pointerdown', 'keydown', 'focusin'] as const;
+  for (const t of events) document.addEventListener(t, remember, true);
+
+  // The origin is the most recent interaction that is not inside the new root and
+  // happened within the last second. The callback runs after the library may have
+  // moved focus into the root, and focus left on an old trigger must not count.
+  const origin = (root: Element): Element | null => {
+    const now = performance.now();
+    return history.find((h) => now - h.at < 1000 && !root.contains(h.target))?.target ?? null;
+  };
+  const excluded = (el: Element) => EXCLUDED.test(el.tagName) || el.hasAttribute(MARK) || (o.ignore?.(el) ?? false);
+
+  const observer = new MutationObserver((records) => {
+    for (const r of records) {
+      for (const n of r.addedNodes) {
+        if (!(n instanceof Element)) continue;
+        try {
+          if (!excluded(n)) apply(n, origin(n), o);
+        } catch {
+          // keep going for the other roots
+        }
+        if (hasMirror(n)) roots.add(n);
+      }
+      for (const n of r.removedNodes) if (n instanceof Element && roots.delete(n)) release(n);
+    }
+  });
+  observer.observe(container, { childList: true });
+
+  return () => {
+    observer.disconnect();
+    for (const t of events) document.removeEventListener(t, remember, true);
+    for (const r of roots) release(r);
+    roots.clear();
+  };
+}
+
+export function start(options?: Options): () => void {
+  if (!hasDocument()) return noop;
+  active ??= begin(resolve(options));
+  owners++;
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    if (--owners === 0) {
+      active?.();
+      active = null;
+    }
+  };
+}

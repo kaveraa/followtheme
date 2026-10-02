@@ -1,0 +1,39 @@
+{
+  "name": "followtheme",
+  "version": "0.1.0",
+  "description": "A scoped theme follows the overlays it opens: dialogs, popovers and toasts portalled to body keep the theme of the section that opened them. React, Vue, any portal library.",
+  "license": "MIT",
+  "author": "Augustin Kavera",
+  "repository": { "type": "git", "url": "git+https://github.com/kaveraa/followtheme.git" },
+  "keywords": ["theme", "portal", "teleport", "css-variables", "dark-mode", "radix", "vaul", "react", "vue"],
+  "type": "module",
+  "sideEffects": false,
+  "files": ["dist"],
+  "exports": {
+    ".": { "types": "./dist/core.d.mts", "default": "./dist/core.mjs" },
+    "./react": { "types": "./dist/react.d.mts", "default": "./dist/react.mjs" },
+    "./vue": { "types": "./dist/vue.d.mts", "default": "./dist/vue.mjs" }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "peerDependencies": { "react": ">=18", "vue": ">=3.3" },
+  "peerDependenciesMeta": { "react": { "optional": true }, "vue": { "optional": true } },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vue/test-utils": "^2.5.1",
+    "happy-dom": "^20.14.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsdown": "^0.23.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.3",
+    "vue": "^3.5.43"
+  },
+  "engines": { "node": ">=22" }
+}

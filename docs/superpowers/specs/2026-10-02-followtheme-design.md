@@ -74,14 +74,17 @@ export function apply(portalRoot: Element, origin: Element | null, options?: Opt
 export function configure(options: Options): void; // sets the defaults used by start/apply/scopeOf
 ```
 
-- `start` installs the observers and returns `stop`. Calling it twice
-  without stopping returns the same `stop` and does nothing else.
+- `start` installs the observers and returns `stop`. Several callers may
+  `start` (a React provider and a Vue plugin on one page): the observers are
+  shared, and torn down when the last caller stops.
 - `scopeOf(el)` returns the nearest ancestor-or-self of `el` that is a theme
   scope, excluding `html` and `body`; `null` when there is none. Passing
   `null` returns `null`.
 - `apply(root, origin)` mirrors `scopeOf(origin)` onto `root` and keeps it
-  in sync until the returned function is called or `root` leaves the DOM.
-  Idempotent: applying again to the same root replaces the previous mirror.
+  in sync until the returned release function is called; the automatic path
+  calls it when the root leaves `body`, the adapters call it on unmount, a
+  plain-DOM caller calls it. Idempotent: applying again to the same root
+  replaces the previous mirror.
 - `configure` lets a framework adapter or an app set defaults once;
   explicit `options` on a call still win.
 
@@ -108,12 +111,13 @@ scope), nothing is written either.
 `start()`:
 
 1. Listens on `document` in capture phase to `pointerdown`, `keydown` and
-   `focusin`, remembering the last target in one variable. This is the
-   fallback origin.
+   `focusin`, remembering the last three targets with their time.
 2. Observes `root` (default `document.body`) for added direct children.
-   For each added element that is not excluded, the origin is
-   `document.activeElement` when it is neither `null`, `body` nor
-   `html`, otherwise the remembered last target. Then `apply(root, origin)`.
+   For each added element that is not excluded, the origin is the most
+   recent remembered target that is not inside the new element and is less
+   than one second old. `document.activeElement` is not used: libraries
+   move focus into the overlay before the callback runs, and focus left on
+   an old trigger must not theme a later overlay. Then `apply(root, origin)`.
 3. Excluded by default: `script`, `style`, `link`, `template`, elements
    already marked `data-followtheme`, and anything the `ignore` option
    returns true for.
