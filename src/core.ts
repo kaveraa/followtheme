@@ -67,3 +67,76 @@ export function scopeOf(el: Element | null, options?: Options): Element | null {
   for (let n: Element | null = el; n && !isRoot(n); n = n.parentElement) if (isScope(n, o)) return n;
   return null;
 }
+
+export const MARK = 'data-followtheme';
+
+type Mirror = { scope: Element; attrs: string[]; classes: string[]; vars: string[]; observer: MutationObserver | null };
+const mirrors = new WeakMap<Element, Mirror>();
+const noop = () => {};
+
+function clear(root: Element, m: Mirror): void {
+  for (const a of m.attrs) root.removeAttribute(a);
+  for (const c of m.classes) root.classList.remove(c);
+  for (const v of m.vars) (root as HTMLElement).style?.removeProperty(v);
+  m.attrs = [];
+  m.classes = [];
+  m.vars = [];
+}
+
+function write(root: Element, m: Mirror, o: Resolved): void {
+  clear(root, m);
+  for (const a of o.attributes) {
+    const v = m.scope.getAttribute(a);
+    if (v !== null && !root.hasAttribute(a)) {
+      root.setAttribute(a, v);
+      m.attrs.push(a);
+    }
+  }
+  for (const c of matchingClasses(m.scope, o)) {
+    if (!root.classList.contains(c)) {
+      root.classList.add(c);
+      m.classes.push(c);
+    }
+  }
+  if (o.inlineVars) {
+    const style = (root as HTMLElement).style;
+    for (const [n, v] of inlineVars(m.scope)) {
+      if (style && !style.getPropertyValue(n)) {
+        style.setProperty(n, v);
+        m.vars.push(n);
+      }
+    }
+  }
+  root.setAttribute(MARK, '');
+}
+
+export function release(root: Element): void {
+  const m = mirrors.get(root);
+  if (!m) return;
+  m.observer?.disconnect();
+  clear(root, m);
+  root.removeAttribute(MARK);
+  mirrors.delete(root);
+}
+
+export const hasMirror = (root: Element): boolean => mirrors.has(root);
+
+export function apply(root: Element, origin: Element | null, options?: Options): () => void {
+  if (!hasDocument()) return noop;
+  const o = resolve(options);
+  release(root);
+  const scope = scopeOf(origin, o);
+  if (!scope || scopeOf(root.parentElement, o)) return noop;
+  const m: Mirror = { scope, attrs: [], classes: [], vars: [], observer: null };
+  write(root, m, o);
+  m.observer = new MutationObserver(() => {
+    try {
+      write(root, m, o);
+    } catch {
+      // one root failing must not stop the others
+    }
+  });
+  m.observer.observe(scope, { attributes: true, attributeFilter: [...o.attributes, 'class', 'style'] });
+  mirrors.set(root, m);
+  return () => release(root);
+}
