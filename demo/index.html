@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>followtheme demo</title>
+<style>
+  :root { --bg: #f4f4f2; --fg: #1a1a19; --accent: #555; }
+  [data-theme="ocean"] { --bg: #0b3954; --fg: #e0fbfc; --accent: #3dccc7; }
+  [data-theme="sand"] { --bg: #f3d9b1; --fg: #4a3728; --accent: #c08552; }
+  body { margin: 0; padding: 24px; font: 15px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+  main { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card, .panel { background: var(--bg); color: var(--fg); border: 2px solid var(--accent); border-radius: 12px; padding: 20px; }
+  .panel { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); min-width: 260px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+  button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 2px solid var(--accent); background: var(--accent); color: var(--bg); cursor: pointer; }
+  h1 { grid-column: 1 / -1; margin: 0; font-size: 20px; }
+  h2 { margin: 0 0 8px; font-size: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>followtheme: each dialog keeps the theme of the card that opened it</h1>
+  <div id="react" style="display: contents"></div>
+  <div id="vue" style="display: contents"></div>
+</main>
+<script type="module" src="/main.tsx"></script>
+</body>
+</html>
