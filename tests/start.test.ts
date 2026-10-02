@@ -90,10 +90,9 @@ describe('start', () => {
     expect(rb.getAttribute('data-theme')).toBe('sand');
   });
 
-  it('stop removes every mirror and start twice returns the same stop', async () => {
+  it('stop removes every mirror', async () => {
     html('<section data-theme="ocean"><button id="b">open</button></section>');
     stop = start();
-    expect(start()).toBe(stop);
     document.getElementById('b')!.focus();
     const root = portal();
     await tick();
@@ -101,6 +100,48 @@ describe('start', () => {
     expect(root.hasAttribute('data-theme')).toBe(false);
     expect(root.hasAttribute('data-followtheme')).toBe(false);
     stop = () => {};
+  });
+
+  it('themes a root even when the library moved focus into it before the callback ran', async () => {
+    html('<section data-theme="ocean"><button id="b">open</button></section>');
+    stop = start();
+    document.getElementById('b')!.focus();
+    const root = portal();
+    const inner = document.createElement('button');
+    root.appendChild(inner);
+    inner.focus();
+    await tick();
+    expect(root.getAttribute('data-theme')).toBe('ocean');
+  });
+
+  it('keeps going when ignore throws', async () => {
+    html('<section data-theme="ocean"><button id="b">open</button></section>');
+    const onError = vi.fn();
+    window.addEventListener('error', onError);
+    stop = start({ ignore: (el) => { if (el.id === 'boom') throw new Error('boom'); return false; } });
+    document.getElementById('b')!.focus();
+    const boom = portal();
+    boom.id = 'boom';
+    const other = portal();
+    await tick();
+    window.removeEventListener('error', onError);
+    expect(onError).not.toHaveBeenCalled();
+    expect(other.getAttribute('data-theme')).toBe('ocean');
+  });
+
+  it('tears down only when the last caller stops', async () => {
+    html('<section data-theme="ocean"><button id="b">open</button></section>');
+    const first = start();
+    const second = start();
+    expect(second).not.toBe(first);
+    document.getElementById('b')!.focus();
+    const root = portal();
+    await tick();
+    first();
+    first();
+    expect(root.getAttribute('data-theme')).toBe('ocean');
+    second();
+    expect(root.hasAttribute('data-theme')).toBe(false);
   });
 });
 

@@ -108,8 +108,10 @@ configure({
 });
 ```
 
-`start` returns `stop`, which removes everything it wrote. Calling `start`
-twice returns the same `stop`.
+`start` returns `stop`, which removes everything it wrote. Several callers
+may `start` on one page (a React provider and a Vue plugin, for example):
+the watcher is shared and torn down when the last one stops. `apply` keeps
+its root in sync until you call the function it returns.
 
 ## When the automatic path is not enough
 

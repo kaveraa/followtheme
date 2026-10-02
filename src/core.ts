@@ -143,32 +143,35 @@ export function apply(root: Element, origin: Element | null, options?: Options):
 
 const EXCLUDED = /^(script|style|link|template)$/i;
 let active: (() => void) | null = null;
+let owners = 0;
 
-export function start(options?: Options): () => void {
-  if (!hasDocument()) return noop;
-  if (active) return active;
-  const o = resolve(options);
+function begin(o: Resolved): () => void {
   const container = o.root ?? document.body;
   const roots = new Set<Element>();
-  let last: Element | null = null;
+  const history: Element[] = [];
   const remember = (e: Event) => {
-    if (e.target instanceof Element) last = e.target;
+    if (!(e.target instanceof Element)) return;
+    history.unshift(e.target);
+    history.length = Math.min(history.length, 3);
   };
   const events = ['pointerdown', 'keydown', 'focusin'] as const;
   for (const t of events) document.addEventListener(t, remember, true);
 
-  const origin = (): Element | null => {
+  // The callback runs after the library may have moved focus into the new root:
+  // the origin is the most recent interaction target that is not inside it.
+  const origin = (root: Element): Element | null => {
     const a = document.activeElement;
-    return a && a !== document.body && a !== document.documentElement ? a : last;
+    const candidates = a && a !== document.body && a !== document.documentElement ? [a, ...history] : history;
+    return candidates.find((c) => !root.contains(c)) ?? null;
   };
   const excluded = (el: Element) => EXCLUDED.test(el.tagName) || el.hasAttribute(MARK) || (o.ignore?.(el) ?? false);
 
   const observer = new MutationObserver((records) => {
     for (const r of records) {
       for (const n of r.addedNodes) {
-        if (!(n instanceof Element) || excluded(n)) continue;
+        if (!(n instanceof Element)) continue;
         try {
-          apply(n, origin(), o);
+          if (!excluded(n)) apply(n, origin(n), o);
         } catch {
           // keep going for the other roots
         }
@@ -179,13 +182,25 @@ export function start(options?: Options): () => void {
   });
   observer.observe(container, { childList: true });
 
-  const stop = () => {
+  return () => {
     observer.disconnect();
     for (const t of events) document.removeEventListener(t, remember, true);
     for (const r of roots) release(r);
     roots.clear();
-    active = null;
   };
-  active = stop;
-  return stop;
+}
+
+export function start(options?: Options): () => void {
+  if (!hasDocument()) return noop;
+  active ??= begin(resolve(options));
+  owners++;
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    if (--owners === 0) {
+      active?.();
+      active = null;
+    }
+  };
 }

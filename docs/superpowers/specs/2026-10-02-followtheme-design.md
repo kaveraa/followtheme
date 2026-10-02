@@ -74,14 +74,17 @@ export function apply(portalRoot: Element, origin: Element | null, options?: Opt
 export function configure(options: Options): void; // sets the defaults used by start/apply/scopeOf
 ```
 
-- `start` installs the observers and returns `stop`. Calling it twice
-  without stopping returns the same `stop` and does nothing else.
+- `start` installs the observers and returns `stop`. Several callers may
+  `start` (a React provider and a Vue plugin on one page): the observers are
+  shared, and torn down when the last caller stops.
 - `scopeOf(el)` returns the nearest ancestor-or-self of `el` that is a theme
   scope, excluding `html` and `body`; `null` when there is none. Passing
   `null` returns `null`.
 - `apply(root, origin)` mirrors `scopeOf(origin)` onto `root` and keeps it
-  in sync until the returned function is called or `root` leaves the DOM.
-  Idempotent: applying again to the same root replaces the previous mirror.
+  in sync until the returned release function is called; the automatic path
+  calls it when the root leaves `body`, the adapters call it on unmount, a
+  plain-DOM caller calls it. Idempotent: applying again to the same root
+  replaces the previous mirror.
 - `configure` lets a framework adapter or an app set defaults once;
   explicit `options` on a call still win.
 
