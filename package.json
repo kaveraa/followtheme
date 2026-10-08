@@ -1,6 +1,6 @@
 {
   "name": "@kaveraa/followtheme",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A scoped theme follows the overlays it opens: dialogs, popovers and toasts portalled to body keep the theme of the section that opened them. React, Vue, any portal library.",
   "license": "MIT",
   "author": "Augustin Kavera",

@@ -5,6 +5,12 @@ follows Keep a Changelog and the project follows Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-08
+
+### Changed
+
+- Built with TypeScript 7. The published files and types are unchanged.
+
 ## [0.1.1] - 2026-10-02
 
 ### Changed
