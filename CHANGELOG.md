@@ -5,6 +5,13 @@ follows Keep a Changelog and the project follows Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Development tools updated (vite, vitest, happy-dom, tsdown). `glob` and
+  `minimatch`, used by `@vue/test-utils`, are forced to a fixed version to
+  close the security alerts. These packages are only used for the tests: the
+  published files do not change.
+
 ## [0.1.2] - 2026-10-08
 
 ### Changed
